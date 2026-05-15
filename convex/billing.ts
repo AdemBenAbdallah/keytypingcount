@@ -122,6 +122,23 @@ function getWebhookMetadata(payload: WebhookPayloadLike) {
 	return {};
 }
 
+function getWebhookCustomer(payload: WebhookPayloadLike) {
+	if (
+		isSubscriptionWebhookData(payload.data) ||
+		isPaymentWebhookData(payload.data)
+	) {
+		return {
+			email: payload.data.customer.email,
+			name: payload.data.customer.name,
+		};
+	}
+
+	return {
+		email: null,
+		name: null,
+	};
+}
+
 function getStringField(record: Record<string, unknown>, key: string) {
 	const value = record[key];
 	return typeof value === "string" ? value : null;
@@ -348,6 +365,26 @@ export const markCheckoutStarted = internalMutation({
 	},
 });
 
+export const markActivationEmailSent = internalMutation({
+	args: {
+		subscriptionId: v.id("subscriptions"),
+	},
+	handler: async (ctx, args) => {
+		const timestamp = Date.now();
+		const subscription = await ctx.db.get(args.subscriptionId);
+		if (!subscription || subscription.activationEmailSentAt) {
+			return null;
+		}
+
+		await ctx.db.patch(args.subscriptionId, {
+			activationEmailSentAt: timestamp,
+			updatedAt: timestamp,
+		});
+
+		return args.subscriptionId;
+	},
+});
+
 export const applyWebhookEvent = internalMutation({
 	args: { payload: v.any() },
 	handler: async (ctx, args) => {
@@ -362,6 +399,8 @@ export const applyWebhookEvent = internalMutation({
 
 		const timestamp = Date.now();
 		const data = payload.data;
+		const { email: resolvedEmail, name: resolvedName } =
+			getWebhookCustomer(payload);
 		const dodoCustomerId =
 			isSubscriptionWebhookData(data) || isPaymentWebhookData(data)
 				? data.customer.customer_id
@@ -389,14 +428,28 @@ export const applyWebhookEvent = internalMutation({
 			updatedAt: timestamp,
 		};
 
+		let subscriptionId = existing?._id;
 		if (existing) {
 			await ctx.db.patch(existing._id, patch);
-			return existing._id;
+		} else {
+			subscriptionId = await ctx.db.insert("subscriptions", {
+				...patch,
+				createdAt: timestamp,
+			});
 		}
 
-		return await ctx.db.insert("subscriptions", {
-			...patch,
-			createdAt: timestamp,
-		});
+		const shouldSendActivationEmail =
+			status === "active" &&
+			!existing?.activationEmailSentAt &&
+			Boolean(resolvedEmail);
+
+		return {
+			sendActivationEmail: shouldSendActivationEmail,
+			email: resolvedEmail,
+			name: resolvedName,
+			planKey,
+			status,
+			subscriptionId: subscriptionId ?? null,
+		};
 	},
 });

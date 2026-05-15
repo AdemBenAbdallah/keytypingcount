@@ -33,6 +33,7 @@ export default defineSchema({
 		activatedAt: v.optional(v.number()),
 		cancelledAt: v.optional(v.number()),
 		expiresAt: v.optional(v.number()),
+		activationEmailSentAt: v.optional(v.number()),
 		lastWebhookAt: v.optional(v.number()),
 		createdAt: v.number(),
 		updatedAt: v.number(),

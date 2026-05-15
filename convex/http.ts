@@ -1,5 +1,6 @@
 import { httpRouter } from "convex/server";
 import DodoPayments from "dodopayments";
+import { getBillingPlan } from "../src/lib/billing";
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
 import { auth } from "./auth";
@@ -33,7 +34,28 @@ http.route({
 			return new Response(message || "Invalid webhook", { status });
 		}
 
-		await ctx.runMutation(internal.billing.applyWebhookEvent, { payload });
+		const result = await ctx.runMutation(internal.billing.applyWebhookEvent, {
+			payload,
+		});
+
+		if (
+			result?.sendActivationEmail &&
+			result.email &&
+			result.planKey &&
+			result.subscriptionId
+		) {
+			await ctx.runAction(internal.sendEmails.sendSubscriptionActivationEmail, {
+				to: result.email,
+				username: result.name ?? undefined,
+				planName: getBillingPlan(result.planKey).label,
+				subscriptionId: result.subscriptionId,
+				appUrl:
+					process.env.APP_URL ??
+					process.env.CONVEX_SITE_URL ??
+					"http://localhost:3000",
+			});
+		}
+
 		return new Response("ok", { status: 200 });
 	}),
 });
