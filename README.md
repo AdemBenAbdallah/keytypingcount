@@ -8,7 +8,7 @@ A private starter template for building SaaS-style web apps with TanStack Start,
 - React 19
 - Convex database, functions, HTTP routes, and Convex Auth
 - Tailwind CSS v4 with shadcn-style primitives
-- Resend email delivery through Convex actions
+- Resend email delivery through Convex actions and email templates
 - Zod for form and environment validation
 - Dodo Payments checkout, portal, subscriptions, and webhook handling
 - Cloudflare Workers deployment through Wrangler
@@ -31,7 +31,7 @@ bun run dev
 2. Configure Convex Auth secrets and optional Google OAuth credentials.
 3. Create Dodo products for each plan and set the product IDs.
 4. Add the Dodo webhook URL in Dodo: `https://<your-convex-site>/api/webhooks/dodo-payments`.
-5. Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` for email delivery.
+5. Set `RESEND_API_KEY` and `RESEND_FROM_EMAIL` for email delivery if your app sends mail.
 6. For production, fill `.env.production` and run `bun run deploy`.
 
 ## Useful Commands
@@ -50,5 +50,5 @@ bun run deploy
 - `src/lib/app-config.ts` for app name and navigation.
 - `src/lib/billing.ts` for plan names, pricing, limits, and product env names.
 - `convex/schema.ts` for your product tables.
-- `convex/sendEmails.ts` and `convex/emails/` for Resend templates.
+- `convex/sendEmails.ts` and `convex/emails/` for generic Resend templates.
 - `src/routes/dashboard.tsx` for your first authenticated app surface.

@@ -7,8 +7,8 @@ import {
 } from "lucide-react";
 
 export const appConfig = {
-	name: import.meta.env.VITE_APP_NAME || "Starter App",
-	description: "A production-ready TanStack Start and Convex SaaS starter.",
+	name: import.meta.env.VITE_APP_NAME || "Your App",
+	description: "A production-ready TanStack Start and Convex starter.",
 };
 
 export type NavItem = {

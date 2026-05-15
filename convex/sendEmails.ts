@@ -1,9 +1,9 @@
 import { Resend } from "@convex-dev/resend";
 import { v } from "convex/values";
 import { render } from "react-email";
-import { components, internal } from "./_generated/api";
+import { components } from "./_generated/api";
 import { internalAction } from "./_generated/server";
-import { ActivationEmail } from "./emails/ActivationEmail";
+import { WelcomeEmail } from "./emails/WelcomeEmail";
 
 export const resend: Resend = new Resend(components.resend, {
 	testMode: false,
@@ -28,23 +28,22 @@ function getFromAddress() {
 }
 
 function getAppName() {
-	return process.env.APP_NAME ?? "Starter App";
+	return process.env.APP_NAME ?? "Your App";
 }
 
-export const sendSubscriptionActivationEmail = internalAction({
+export const sendWelcomeEmail = internalAction({
 	args: {
 		to: v.string(),
-		username: v.optional(v.string()),
-		planName: v.string(),
-		subscriptionId: v.id("subscriptions"),
+		name: v.optional(v.string()),
+		message: v.optional(v.string()),
 		appUrl: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		const html = await render(
-			ActivationEmail({
+			WelcomeEmail({
 				appName: getAppName(),
-				username: args.username,
-				planName: args.planName,
+				name: args.name,
+				message: args.message,
 				appUrl: getAppUrl(args.appUrl),
 			}),
 		);
@@ -52,12 +51,8 @@ export const sendSubscriptionActivationEmail = internalAction({
 		await resend.sendEmail(ctx, {
 			from: getFromAddress(),
 			to: args.to,
-			subject: `Your ${args.planName} plan is active`,
+			subject: `Welcome to ${getAppName()}`,
 			html,
-		});
-
-		await ctx.runMutation(internal.billing.markActivationEmailSent, {
-			subscriptionId: args.subscriptionId,
 		});
 	},
 });

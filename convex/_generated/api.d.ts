@@ -10,8 +10,8 @@
 
 import type * as auth from "../auth.js";
 import type * as billing from "../billing.js";
-import type * as emails_ActivationEmail from "../emails/ActivationEmail.js";
 import type * as emails_EmailFrame from "../emails/EmailFrame.js";
+import type * as emails_WelcomeEmail from "../emails/WelcomeEmail.js";
 import type * as http from "../http.js";
 import type * as sendEmails from "../sendEmails.js";
 import type * as settings from "../settings.js";
@@ -26,8 +26,8 @@ import type {
 declare const fullApi: ApiFromModules<{
 	auth: typeof auth;
 	billing: typeof billing;
-	"emails/ActivationEmail": typeof emails_ActivationEmail;
 	"emails/EmailFrame": typeof emails_EmailFrame;
+	"emails/WelcomeEmail": typeof emails_WelcomeEmail;
 	http: typeof http;
 	sendEmails: typeof sendEmails;
 	settings: typeof settings;
