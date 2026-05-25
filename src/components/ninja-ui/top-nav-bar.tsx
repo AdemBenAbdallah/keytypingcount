@@ -119,7 +119,10 @@ function TimerSelector({
 						className="ninja-timer-selector__option"
 						data-active={option === durationSeconds ? "true" : "false"}
 						key={option}
-						onClick={() => onDurationChange(option)}
+						onClick={(event) => {
+							event.currentTarget.blur();
+							onDurationChange(option);
+						}}
 						type="button"
 					>
 						{option}

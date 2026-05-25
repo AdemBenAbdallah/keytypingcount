@@ -3,6 +3,7 @@ import {
 	calculateMetrics,
 	compareCharacters,
 	createPrompt,
+	getTypingStatus,
 	promptToText,
 	TIMER_OPTIONS,
 	type TimerOption,
@@ -18,10 +19,11 @@ type TypingSessionState = {
 };
 
 type TypingSessionAction =
+	| { type: "append"; character: string; now: number; targetText: string }
+	| { type: "backspace"; deleteWord: boolean; now: number; targetText: string }
 	| { type: "reset"; now: number }
 	| { type: "set-duration"; durationSeconds: TimerOption; now: number }
-	| { type: "tick"; now: number }
-	| { type: "type"; targetText: string; typedText: string; now: number };
+	| { type: "tick"; now: number };
 
 const initialState: TypingSessionState = {
 	durationSeconds: 30,
@@ -58,8 +60,15 @@ function typingSessionReducer(
 				...state,
 				now: action.now,
 			};
-		case "type": {
-			const nextTypedText = action.typedText.slice(0, action.targetText.length);
+		case "append": {
+			if (isSessionFinished(state, action.now, action.targetText)) {
+				return state;
+			}
+
+			const nextTypedText = `${state.typedText}${action.character}`.slice(
+				0,
+				action.targetText.length,
+			);
 
 			return {
 				...state,
@@ -69,6 +78,19 @@ function typingSessionReducer(
 						? action.now
 						: state.startedAt,
 				typedText: nextTypedText,
+			};
+		}
+		case "backspace": {
+			if (isSessionFinished(state, action.now, action.targetText)) {
+				return state;
+			}
+
+			return {
+				...state,
+				now: action.now,
+				typedText: action.deleteWord
+					? removePreviousWord(state.typedText)
+					: state.typedText.slice(0, -1),
 			};
 		}
 		default:
@@ -105,6 +127,45 @@ export function useTypingSession() {
 		return () => window.clearInterval(intervalId);
 	}, [metrics.status]);
 
+	useEffect(() => {
+		const handleKeyDown = (event: KeyboardEvent) => {
+			if (shouldIgnoreKeyEvent(event)) {
+				return;
+			}
+
+			if (event.key === "Escape") {
+				event.preventDefault();
+				dispatch({ type: "reset", now: Date.now() });
+				return;
+			}
+
+			if (event.key === "Backspace" || event.key === "Delete") {
+				event.preventDefault();
+				dispatch({
+					type: "backspace",
+					deleteWord: event.ctrlKey || event.altKey,
+					now: Date.now(),
+					targetText,
+				});
+				return;
+			}
+
+			if (event.key.length === 1 && !event.metaKey && !event.ctrlKey) {
+				event.preventDefault();
+				dispatch({
+					type: "append",
+					character: event.key,
+					now: Date.now(),
+					targetText,
+				});
+			}
+		};
+
+		window.addEventListener("keydown", handleKeyDown);
+
+		return () => window.removeEventListener("keydown", handleKeyDown);
+	}, [targetText]);
+
 	return {
 		characters,
 		durationSeconds: state.durationSeconds,
@@ -117,17 +178,45 @@ export function useTypingSession() {
 		reset: () => dispatch({ type: "reset", now: Date.now() }),
 		setDuration: (durationSeconds: TimerOption) =>
 			dispatch({ type: "set-duration", durationSeconds, now: Date.now() }),
-		setTypedText: (typedText: string) => {
-			if (isFinished) {
-				return;
-			}
-
-			dispatch({
-				type: "type",
-				now: Date.now(),
-				targetText,
-				typedText,
-			});
-		},
 	};
+}
+
+function isSessionFinished(
+	state: TypingSessionState,
+	now: number,
+	targetText: string,
+) {
+	return (
+		getTypingStatus({
+			durationSeconds: state.durationSeconds,
+			now,
+			startedAt: state.startedAt,
+			targetText,
+			typedText: state.typedText,
+		}) === "finished"
+	);
+}
+
+function removePreviousWord(typedText: string) {
+	return typedText.replace(/\s*\S+\s*$/, "");
+}
+
+function shouldIgnoreKeyEvent(event: KeyboardEvent) {
+	if (event.defaultPrevented || event.isComposing) {
+		return true;
+	}
+
+	const target = event.target;
+
+	if (!(target instanceof HTMLElement)) {
+		return false;
+	}
+
+	if (
+		target.closest("button, input, textarea, select, [contenteditable='true']")
+	) {
+		return true;
+	}
+
+	return false;
 }

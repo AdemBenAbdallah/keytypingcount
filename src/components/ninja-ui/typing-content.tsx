@@ -1,4 +1,3 @@
-import { useRef } from "react";
 import type {
 	CharacterComparison,
 	PromptWord,
@@ -9,7 +8,6 @@ type TypingContentProps = {
 	characters: CharacterComparison[];
 	metrics: TypingMetrics;
 	onReset: () => void;
-	onTypedTextChange: (typedText: string) => void;
 	prompt: PromptWord[];
 	typedText: string;
 };
@@ -18,12 +16,9 @@ export function TypingContent({
 	characters,
 	metrics,
 	onReset,
-	onTypedTextChange,
 	prompt,
 	typedText,
 }: TypingContentProps) {
-	const inputRef = useRef<HTMLTextAreaElement>(null);
-
 	return (
 		<div className="ninja-typing-content">
 			<div className="ninja-language-chip">
@@ -34,11 +29,10 @@ export function TypingContent({
 				</span>
 			</div>
 			<TypingStats metrics={metrics} onReset={onReset} />
-			<div
-				className="ninja-word-preview"
-				role="img"
-				aria-label="Typing preview text"
-			>
+			<div className="ninja-word-preview">
+				{typedText.length === 0 ? (
+					<div className="ninja-typing-hint">start typing</div>
+				) : null}
 				{prompt.map((word) => (
 					<span
 						className="ninja-word-preview__word"
@@ -74,23 +68,6 @@ export function TypingContent({
 					</span>
 				))}
 			</div>
-			<textarea
-				aria-label="Typing input"
-				autoCapitalize="none"
-				autoComplete="off"
-				autoCorrect="off"
-				className="ninja-typing-input"
-				onChange={(event) => onTypedTextChange(event.currentTarget.value)}
-				onKeyDown={(event) => {
-					if (event.key === "Escape") {
-						onReset();
-					}
-				}}
-				readOnly={metrics.status === "finished"}
-				ref={inputRef}
-				spellCheck={false}
-				value={typedText}
-			/>
 			<div className="ninja-content-emblem" aria-hidden="true">
 				◉
 			</div>
@@ -120,7 +97,14 @@ function TypingStats({
 					<span>{stat.label}</span>
 				</div>
 			))}
-			<button className="ninja-reset-button" onClick={onReset} type="button">
+			<button
+				className="ninja-reset-button"
+				onClick={(event) => {
+					event.currentTarget.blur();
+					onReset();
+				}}
+				type="button"
+			>
 				reset
 			</button>
 		</div>

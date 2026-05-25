@@ -25,7 +25,6 @@ export function NinjaTypingScreen() {
 						characters={typingSession.characters}
 						metrics={typingSession.metrics}
 						onReset={typingSession.reset}
-						onTypedTextChange={typingSession.setTypedText}
 						prompt={typingSession.prompt}
 						typedText={typingSession.typedText}
 					/>

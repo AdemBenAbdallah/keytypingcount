@@ -11,7 +11,6 @@ type MainParchmentPanelProps = {
 	characters: CharacterComparison[];
 	metrics: TypingMetrics;
 	onReset: () => void;
-	onTypedTextChange: (typedText: string) => void;
 	prompt: PromptWord[];
 	typedText: string;
 };
@@ -20,7 +19,6 @@ export function MainParchmentPanel({
 	characters,
 	metrics,
 	onReset,
-	onTypedTextChange,
 	prompt,
 	typedText,
 }: MainParchmentPanelProps) {
@@ -37,7 +35,6 @@ export function MainParchmentPanel({
 				characters={characters}
 				metrics={metrics}
 				onReset={onReset}
-				onTypedTextChange={onTypedTextChange}
 				prompt={prompt}
 				typedText={typedText}
 			/>
