@@ -756,13 +756,18 @@ body {
 	}
 
 	.ninja-word-preview__cursor {
-		display: inline-block;
+		position: absolute;
+		top: 50%;
+		left: -0.08em;
+		z-index: 2;
+		display: block;
 		width: 0.08em;
 		height: 1.35em;
-		margin-right: 0.08em;
+		margin-right: 0;
 		background: #b94722;
 		box-shadow: 0 0 7px rgb(220 89 38 / 0.35);
-		vertical-align: -0.22em;
+		pointer-events: none;
+		transform: translateY(-50%);
 	}
 
 	.ninja-word-preview__word {
@@ -794,6 +799,7 @@ body {
 	}
 
 	.ninja-word-preview__space {
+		position: relative;
 		display: inline-block;
 		width: 0.82em;
 		height: 1.08em;
