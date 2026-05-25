@@ -61,10 +61,13 @@ function RootLayout() {
 }
 
 function AuthGuard() {
-	const { isLoading, isAuthenticated } = useConvexAuth();
+	const auth = useConvexAuth();
+	const isLoading = auth?.isLoading ?? true;
+	const isAuthenticated = auth?.isAuthenticated ?? false;
 	const location = useLocation();
 	const navigate = useNavigate();
-	const isPublicPath = publicPaths.has(location.pathname);
+	const pathname = location.pathname;
+	const isPublicPath = publicPaths.has(pathname);
 
 	useEffect(() => {
 		if (isLoading) {
@@ -75,18 +78,15 @@ function AuthGuard() {
 			void navigate({ to: "/auth", replace: true });
 		}
 
-		if (
-			isAuthenticated &&
-			(location.pathname === "/" || location.pathname === "/auth")
-		) {
+		if (isAuthenticated && (pathname === "/" || pathname === "/auth")) {
 			void navigate({ to: "/dashboard", replace: true });
 		}
-	}, [isLoading, isAuthenticated, isPublicPath, location.pathname, navigate]);
+	}, [isLoading, isAuthenticated, isPublicPath, pathname, navigate]);
 
 	if (!isPublicPath && isLoading) {
 		return (
 			<div className="grid min-h-screen place-items-center bg-background">
-				<div className="text-muted-foreground">Loading...</div>
+				<div className="text-muted-foreground">Loading&hellip;</div>
 			</div>
 		);
 	}
